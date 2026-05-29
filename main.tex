@@ -1,0 +1,519 @@
+\documentclass[oneside,a4paper,14pt]{extarticle}
+\usepackage[T1,T2A]{fontenc}
+\usepackage[a4paper,letterpaper,top=20mm,bottom=20mm,left=30mm,right=10mm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{textcomp}
+\usepackage{indentfirst}
+\usepackage{graphicx}
+\usepackage{mwe}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage[all]{xy}
+\usepackage[breaklinks]{hyperref}
+\usepackage{titlesec}
+\titleformat{\section}{\normalsize\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+\renewcommand\baselinestretch{1.33}\normalsize
+\setlength{\parindent}{1.25cm}
+\usepackage{indentfirst}
+
+\begin{document}
+    \newpage\thispagestyle{empty}
+    \begin{center}
+        МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ\\
+            РОССИЙСКОЙ ФЕДЕРАЦИИ
+            ФЕДЕРАЛЬНОЕ ГОСУДАРСТВЕННОЕ БЮДЖЕТНОЕ\\
+            ОБРАЗОВАТЕЛЬНОЕ
+            УЧРЕЖДЕНИЕ ВЫСШЕГО ОБРАЗОВАНИЯ\\
+            «ВЯТСКИЙ ГОСУДАРСТВЕННЫЙ УНИВЕРСИТЕТ»\\
+            Институт математики и информационных систем\\
+            Факультет автоматики и вычислительной техники\\
+            Кафедра электронных вычислительных машин
+    \end{center}
+    \vspace{20mm}
+
+    \begin{center}
+        Отчёт по лабораторной работе №4.2\\
+        по дисциплине\\
+        <<Программирование>>\\
+    \end{center}
+    \vspace{48mm}
+
+    Выполнил студент гр. ИВТб-1302-06-00 \hspace{10mm} \rule[-0,5mm]{30mm}{0.15mm}\,/Изместьев М.Н./
+
+
+    Проверил доцент кафедры ЭВМ \hfill  \rule[-0,5mm]{30mm}{0.15mm}\,/Баташев П.А./
+
+    \vfill
+    \begin{center}
+        Киров\\
+        2026
+    \end{center}
+
+    \newpage\thispagestyle{empty}
+
+\begin{flushleft}
+\section*{Цель работы:}
+\noindent Научиться создавать простые графические интерфейсы с использованием библиотеки tkinter, организовывать обработку событий и интегрировать ранее разработанные программные модули в единое приложение. Закрепить понимание работы выбранной структуры данных через её визуальное представление.
+
+\section*{Задание.}
+
+1. На основе реализации структуры данных из лабораторной работы 4.1. необходимо разработать оконное приложение с графическим интерфейсом на Python.
+
+2. Все операции со структурой данных должны выполняться исключительно через вызовы функций отдельно оформленных библиотечных модулей.
+
+3. Необходимо предусмотреть реализацию, как минимум двух модулей: один на С++, второй --- Python.
+
+4. Для получения дополнительных баллов, необходима реализация двух вариантов С++ модуля: с использованием структур на динамической памяти и с использованием контейнеров и адаптеров STL.
+
+5. Интерфейс должен адекватно реагировать на попытку выполнить некорректную операцию (например, Pop из пустого стека), выводя понятное сообщение, без аварийного завершения программы.
+
+6. Визуализация должна обновляться после каждой успешной операции.
+
+7. В качестве ответа необходимо прикрепить отчёт и ссылку на репозиторий с проектом.
+
+\textbf{Структура:} Кольцевая очередь (Circular Queue)
+
+\textbf{Дополнительная возможность:} реализованы два варианта C++ модуля --- на динамической памяти и с использованием STL (\texttt{std::list})
+
+\textbf{Язык:} C++, Python
+\end{flushleft}
+
+\newpage
+\section*{Описание работы программы}
+
+Приложение реализует графический интерфейс для работы с кольцевой очередью. Код разбит на три независимых модуля: Python-реализация, C++ на динамической памяти и C++ через STL. GUI позволяет переключаться между бэкендами в реальном времени.
+
+\textbf{Принцип кольцевой очереди.} Структура хранит хвостовой указатель \texttt{tail}. Голова получается как \texttt{tail->next}. При добавлении новый узел вставляется после хвоста и становится новым хвостом; при удалении (dequeue) извлекается \texttt{tail->next}.
+
+\textbf{GUI.} Написан в объектно-ориентированном стиле. Базовый интерфейс \texttt{QueueBackend} унифицирует работу с тремя реализациями. Класс \texttt{App} строит окно, обрабатывает события и перерисовывает \texttt{Canvas} после каждой операции. Элементы отображаются в виде цветных кружков на окружности со стрелками: зелёный --- HEAD, красный --- TAIL.
+
+\newpage
+\textbf{Модуль Python (circular\_queue\_py.py)}
+\small
+\begin{verbatim}
+class Uzl:
+    def __init__(self, data):
+        self.data = data
+        self.next = None
+
+
+class Sruct:
+    def __init__(self):
+        self.tail = None
+        self.size = 0
+
+    def add(self, value):
+        new_uzl = Uzl(value)
+        if self.tail is None:
+            new_uzl.next = new_uzl
+            self.tail = new_uzl
+        else:
+            new_uzl.next = self.tail.next
+            self.tail.next = new_uzl
+            self.tail = new_uzl
+        self.size += 1
+        return 1
+
+    def dequeue(self):
+        if self.tail is None:
+            return None
+        head = self.tail.next
+        value = head.data
+        if self.tail == head:
+            self.tail = None
+        else:
+            self.tail.next = head.next
+        self.size -= 1
+        return value
+
+    def peek(self):
+        if self.tail is None:
+            return None
+        return self.tail.next.data
+
+    def clear(self):
+        while self.size > 0:
+            self.dequeue()
+
+    def get_size(self):
+        return self.size
+
+    def get_elements(self):
+        if self.tail is None:
+            return []
+        elements = []
+        current = self.tail.next
+        for _ in range(self.size):
+            elements.append(current.data)
+            current = current.next
+        return elements
+\end{verbatim}
+
+\newpage
+\textbf{Модуль C++ Dynamic (circular\_queue\_dynamic.cpp)}
+\small
+\begin{verbatim}
+#ifdef _WIN32
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT
+#endif
+
+struct Uzl {
+    int data;
+    Uzl* next;
+};
+
+struct Sruct {
+    Uzl* tail;
+    int size;
+};
+
+static Sruct queue;
+
+extern "C" {
+
+EXPORT void lib_init() {
+    queue.tail = nullptr;
+    queue.size = 0;
+}
+
+EXPORT int lib_add(int value) {
+    Uzl* newUzl = new Uzl;
+    newUzl->data = value;
+    if (queue.tail == nullptr) {
+        newUzl->next = newUzl;
+        queue.tail = newUzl;
+    } else {
+        newUzl->next = queue.tail->next;
+        queue.tail->next = newUzl;
+        queue.tail = newUzl;
+    }
+    queue.size++;
+    return 1;
+}
+
+EXPORT int lib_dequeue(int* value) {
+    if (queue.tail == nullptr) return 0;
+    Uzl* head = queue.tail->next;
+    *value = head->data;
+    if (queue.tail == head) {
+        queue.tail = nullptr;
+    } else {
+        queue.tail->next = head->next;
+    }
+    delete head;
+    queue.size--;
+    return 1;
+}
+
+EXPORT int lib_peek(int* value) {
+    if (queue.tail == nullptr) return 0;
+    *value = queue.tail->next->data;
+    return 1;
+}
+
+EXPORT void lib_clear() {
+    int value;
+    while (queue.size > 0) lib_dequeue(&value);
+}
+
+EXPORT int lib_size() { return queue.size; }
+
+EXPORT int lib_get_elements(int* buffer, int maxSize) {
+    if (queue.tail == nullptr || maxSize <= 0) return 0;
+    Uzl* current = queue.tail->next;
+    int count = 0;
+    for (int i = 0; i < queue.size && i < maxSize; i++) {
+        buffer[i] = current->data;
+        current = current->next;
+        count++;
+    }
+    return count;
+}
+
+}
+\end{verbatim}
+
+\newpage
+\textbf{Модуль C++ STL (circular\_queue\_stl.cpp)}
+\small
+\begin{verbatim}
+#ifdef _WIN32
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT
+#endif
+
+#include <list>
+static std::list<int> queue;
+
+extern "C" {
+
+EXPORT void lib_init()          { queue.clear(); }
+EXPORT int  lib_add(int value)  { queue.push_back(value); return 1; }
+
+EXPORT int lib_dequeue(int* value) {
+    if (queue.empty()) return 0;
+    *value = queue.front();
+    queue.pop_front();
+    return 1;
+}
+
+EXPORT int lib_peek(int* value) {
+    if (queue.empty()) return 0;
+    *value = queue.front();
+    return 1;
+}
+
+EXPORT void lib_clear()  { queue.clear(); }
+EXPORT int  lib_size()   { return (int)queue.size(); }
+
+EXPORT int lib_get_elements(int* buffer, int maxSize) {
+    if (queue.empty() || maxSize <= 0) return 0;
+    int count = 0;
+    for (auto it = queue.begin(); it != queue.end() && count < maxSize; ++it)
+        buffer[count++] = *it;
+    return count;
+}
+
+}
+\end{verbatim}
+
+\newpage
+\textbf{GUI-приложение (gui\_app.py --- ключевые части)}
+\small
+\begin{verbatim}
+import tkinter as tk
+from tkinter import messagebox
+import ctypes, os, sys, math, random
+
+try:
+    from circular_queue_py import Sruct
+except ImportError:
+    Sruct = None
+
+class QueueBackend:
+    def init(self): pass
+    def add(self, val): pass
+    def dequeue(self): return None
+    def peek(self): return None
+    def clear(self): pass
+    def size(self): return 0
+    def get_elements(self): return []
+
+class PythonBackend(QueueBackend):
+    def __init__(self):
+        self.q = None
+        self.is_list = Sruct is None
+    def init(self):
+        self.q = Sruct() if Sruct else []
+    def add(self, val):
+        if self.is_list: self.q.append(val)
+        else: self.q.add(val)
+    def dequeue(self):
+        if self.is_list: return self.q.pop(0) if self.q else None
+        return self.q.dequeue()
+    def peek(self):
+        if self.is_list: return self.q[0] if self.q else None
+        return self.q.peek()
+    def clear(self):
+        if self.is_list: self.q.clear()
+        else: self.q.clear()
+    def size(self):
+        return len(self.q) if self.is_list else self.q.get_size()
+    def get_elements(self):
+        return list(self.q) if self.is_list else self.q.get_elements()
+
+class CppBackend(QueueBackend):
+    def __init__(self, path):
+        self.lib = None
+        if os.path.exists(path):
+            self.lib = ctypes.CDLL(path)
+            self.lib.lib_init.restype      = None
+            self.lib.lib_add.restype       = ctypes.c_int
+            self.lib.lib_add.argtypes      = [ctypes.c_int]
+            self.lib.lib_dequeue.restype   = ctypes.c_int
+            self.lib.lib_dequeue.argtypes  = [ctypes.POINTER(ctypes.c_int)]
+            self.lib.lib_peek.restype      = ctypes.c_int
+            self.lib.lib_peek.argtypes     = [ctypes.POINTER(ctypes.c_int)]
+            self.lib.lib_clear.restype     = None
+            self.lib.lib_size.restype      = ctypes.c_int
+            self.lib.lib_get_elements.restype  = ctypes.c_int
+            self.lib.lib_get_elements.argtypes = [ctypes.POINTER(ctypes.c_int),
+                                                   ctypes.c_int]
+    def is_valid(self): return self.lib is not None
+    def init(self):
+        if self.lib: self.lib.lib_init()
+    def add(self, val):
+        if self.lib: self.lib.lib_add(val)
+    def dequeue(self):
+        if not self.lib: return None
+        val = ctypes.c_int()
+        res = self.lib.lib_dequeue(ctypes.byref(val))
+        return val.value if res else None
+    def peek(self):
+        if not self.lib: return None
+        val = ctypes.c_int()
+        res = self.lib.lib_peek(ctypes.byref(val))
+        return val.value if res else None
+    def clear(self):
+        if self.lib: self.lib.lib_clear()
+    def size(self):
+        return self.lib.lib_size() if self.lib else 0
+    def get_elements(self):
+        if not self.lib: return []
+        buf = (ctypes.c_int * 10000)()
+        count = self.lib.lib_get_elements(buf, 10000)
+        return [buf[i] for i in range(count)]
+\end{verbatim}
+
+\newpage
+\small
+\begin{verbatim}
+class App:
+    def __init__(self, root):
+        self.root = root
+        self.backend = None
+        self.is_created = False
+        base = os.path.dirname(os.path.abspath(__file__))
+        ext = ".dll" if sys.platform == "win32" else ".so"
+        self.backends = {
+            "Python":     PythonBackend(),
+            "C++ Dynamic": CppBackend(os.path.join(base,
+                              "circular_queue_dynamic" + ext)),
+            "C++ STL":     CppBackend(os.path.join(base,
+                              "circular_queue_stl" + ext))
+        }
+        self.setup_ui()
+
+    def setup_ui(self):
+        top = tk.Frame(self.root)
+        top.pack(fill=tk.X, padx=10, pady=5)
+        tk.Label(top, text="Бэкенд:").pack(side=tk.LEFT)
+        self.bk_var = tk.StringVar(value="Python")
+        for name, bk in self.backends.items():
+            if name == "Python" or (isinstance(bk, CppBackend) and bk.is_valid()):
+                tk.Radiobutton(top, text=name, variable=self.bk_var,
+                    value=name, command=self.on_change_backend).pack(side=tk.LEFT)
+        self.lbl_status = tk.Label(self.root, text="Не создано", fg="red")
+        self.lbl_status.pack()
+        self.canvas = tk.Canvas(self.root, width=880, height=380,
+                                bg="white", relief=tk.SUNKEN, bd=2)
+        self.canvas.pack(padx=10, pady=5)
+        inp = tk.Frame(self.root)
+        inp.pack(fill=tk.X, padx=10)
+        self.ent_val = self.mk_entry(inp, "Значение:", 8)
+        self.ent_cnt = self.mk_entry(inp, "Кол-во:",   5)
+        self.ent_min = self.mk_entry(inp, "Мин:",      5)
+        self.ent_max = self.mk_entry(inp, "Макс:",     5)
+        btns = tk.Frame(self.root)
+        btns.pack(fill=tk.X, padx=10, pady=5)
+        self.mk_btn(btns, "Создать",   self.create)
+        self.mk_btn(btns, "Добавить",  self.add)
+        self.mk_btn(btns, "Удалить",   self.dequeue)
+        self.mk_btn(btns, "Peek",      self.peek)
+        self.mk_btn(btns, "Случайные", self.rand_add)
+        self.mk_btn(btns, "Очистить",  self.clear)
+        self.log_txt = tk.Text(self.root, height=6,
+                               state=tk.DISABLED, bg="#f0f0f0")
+        self.log_txt.pack(fill=tk.BOTH, padx=10, pady=5)
+
+    def refresh(self):
+        self.canvas.delete("all")
+        if not self.is_created:
+            self.draw_text("Структура не создана")
+            return
+        elems = self.backend.get_elements()
+        sz = len(elems)
+        self.lbl_status.config(
+            text="Бэкенд: " + self.bk_var.get() + " | Размер: " + str(sz),
+            fg="green")
+        if sz == 0:
+            self.draw_text("Очередь пуста")
+            return
+        cx, cy = 440, 200
+        r  = 30 + sz * 12 if sz < 10 else 150
+        nr = 22
+        coords = []
+        for i in range(sz):
+            ang = -math.pi / 2 + 2 * math.pi * i / sz
+            coords.append((cx + r * math.cos(ang), cy + r * math.sin(ang)))
+        for i in range(sz):
+            x1, y1 = coords[i]
+            x2, y2 = coords[(i + 1) % sz]
+            dx, dy = x2 - x1, y2 - y1
+            dist = math.sqrt(dx*dx + dy*dy)
+            if dist == 0: continue
+            self.canvas.create_line(
+                x1 + dx/dist*nr, y1 + dy/dist*nr,
+                x2 - dx/dist*nr, y2 - dy/dist*nr,
+                arrow=tk.LAST, fill="#555", width=2)
+        for i, (x, y) in enumerate(coords):
+            col = "#4CAF50" if i == 0 else ("#F44336" if i == sz-1 else "#2196F3")
+            self.canvas.create_oval(x-nr, y-nr, x+nr, y+nr, fill=col, width=2)
+            self.canvas.create_text(x, y, text=str(elems[i]),
+                                    fill="white", font=("Arial", 10, "bold"))
+        self.canvas.create_text(coords[0][0], coords[0][1]-nr-12,
+                                text="HEAD", fill="green",
+                                font=("Arial", 9, "bold"))
+        self.canvas.create_text(coords[-1][0], coords[-1][1]+nr+12,
+                                text="TAIL", fill="red",
+                                font=("Arial", 9, "bold"))
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("Циклическая очередь")
+    root.geometry("900x720")
+    App(root)
+    root.mainloop()
+\end{verbatim}
+
+\normalsize
+\newpage
+\textbf{Экранные формы:}
+
+\centering
+    \includegraphics[width=0.85\linewidth]{1.png}
+    \label{fig:screen1}
+
+    \textbf{Рисунок 1 --- }Главное окно, Python-бэкенд, пустая очередь
+
+\centering
+    \includegraphics[width=0.85\linewidth]{2.png}
+    \label{fig:screen2}
+
+    \textbf{Рисунок 2 --- }Элементы в очереди (визуализация на Canvas)
+
+\centering
+    \includegraphics[width=0.85\linewidth]{3.png}
+    \label{fig:screen3}
+
+    \textbf{Рисунок 3 --- }Переключение на C++ Dynamic
+
+\centering
+    \includegraphics[width=0.85\linewidth]{4.png}
+    \label{fig:screen4}
+
+    \textbf{Рисунок 4 --- }Операция Peek
+
+\centering
+    \includegraphics[width=0.85\linewidth]{5.png}
+    \label{fig:screen5}
+
+    \textbf{Рисунок 5 --- }Сообщение об ошибке при операции с пустой очередью
+
+\begin{flushleft}
+\newpage
+\section*{Вывод}
+\noindent
+В ходе лабораторной работы я научился создавать графический интерфейс с использованием библиотеки tkinter и интегрировать в него модули на Python и C++. Была реализована кольцевая очередь в трёх вариантах: Python, C++ на динамической памяти и C++ через STL (\texttt{std::list}). GUI позволяет переключаться между бэкендами в реальном времени и визуализирует состояние структуры на Canvas в виде кольца с направленными стрелками. Все некорректные операции обрабатываются без аварийного завершения программы.
+\end{flushleft}
+
+\end{document}
